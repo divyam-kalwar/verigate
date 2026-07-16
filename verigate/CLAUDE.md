@@ -219,7 +219,7 @@ Always explain important design decisions.
 
 - [x] Project setup
 - [x] MongoDB connection
-- [ ] Seed data
+- [x] Seed data
 - [x] Authentication
 - [x] User validation
 - [ ] IP Whitelisting

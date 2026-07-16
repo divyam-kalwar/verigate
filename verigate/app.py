@@ -7,12 +7,13 @@ instance is kept for simple WSGI / `flask run` usage, while `create_app` is the
 preferred, configurable entry point (e.g. for tests and multiple app instances).
 """
 
-import os
+import uuid
 
-from flask import Flask
+from flask import Flask, jsonify
 
 from verigate.config import Config
 from verigate.database.mongo import init_mongo
+from verigate.exceptions.api_exception import ApiException
 from verigate.routes import register_blueprints
 from verigate.services import build_auth_service
 
@@ -38,6 +39,18 @@ def create_app(config: "Config | None" = None) -> Flask:
     app.extensions["auth_service"] = build_auth_service()
 
     register_blueprints(app)
+
+    @app.errorhandler(ApiException)
+    def handle_api_exception(ex: ApiException):
+        """Return the standard VeriGate error envelope for known API errors."""
+        return jsonify(
+            {
+                "request_id": f"req_{uuid.uuid4().hex[:8]}",
+                "status": "FAILED",
+                "error_code": ex.error_code,
+                "message": ex.message,
+            }
+        ), ex.status
 
     @app.get("/health")
     def health() -> dict:
