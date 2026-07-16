@@ -11,9 +11,10 @@ import os
 
 from flask import Flask
 
-from config import Config
-from database.mongo import init_mongo
-from routes import register_blueprints
+from verigate.config import Config
+from verigate.database.mongo import init_mongo
+from verigate.routes import register_blueprints
+from verigate.services import build_auth_service
 
 
 def create_app(config: "Config | None" = None) -> Flask:
@@ -33,6 +34,8 @@ def create_app(config: "Config | None" = None) -> Flask:
     app.config.from_mapping(app_config.to_mapping())
 
     init_mongo(app)
+
+    app.extensions["auth_service"] = build_auth_service()
 
     register_blueprints(app)
 

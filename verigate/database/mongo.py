@@ -22,6 +22,8 @@ def init_mongo(app: Flask) -> None:
             DATABASE_NAME.
     """
     client = MongoClient(app.config["MONGO_URI"])
+    # Test connection to fail-fast if database is not reachable
+    client.admin.command("ping")
     app.extensions["mongo_client"] = client
     app.extensions["mongo_db"] = client[app.config["DATABASE_NAME"]]
 

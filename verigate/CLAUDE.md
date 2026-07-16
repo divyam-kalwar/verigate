@@ -218,10 +218,10 @@ Always explain important design decisions.
 # Project Progress
 
 - [x] Project setup
-- [ ] MongoDB connection
+- [x] MongoDB connection
 - [ ] Seed data
-- [ ] Authentication
-- [ ] User validation
+- [x] Authentication
+- [x] User validation
 - [ ] IP Whitelisting
 - [ ] TPS Limiter
 - [ ] Vendor Simulation

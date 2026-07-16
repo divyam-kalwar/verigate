@@ -26,6 +26,8 @@ class Config:
         self.MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
         self.DATABASE_NAME: str = os.getenv("DATABASE_NAME", "verigate")
         self.ADMIN_KEY: str = os.getenv("ADMIN_KEY", "")
+        self.VENDOR_A_FAILURE_RATE: float = float(os.getenv("VENDOR_A_FAILURE_RATE", "0.2"))
+        self.VENDOR_A_TIMEOUT_RATE: float = float(os.getenv("VENDOR_A_TIMEOUT_RATE", "0.1"))
 
     def to_mapping(self) -> dict:
         """Expose configuration as a mapping suitable for Flask's config."""
@@ -34,4 +36,6 @@ class Config:
             "MONGO_URI": self.MONGO_URI,
             "DATABASE_NAME": self.DATABASE_NAME,
             "ADMIN_KEY": self.ADMIN_KEY,
+            "VENDOR_A_FAILURE_RATE": self.VENDOR_A_FAILURE_RATE,
+            "VENDOR_A_TIMEOUT_RATE": self.VENDOR_A_TIMEOUT_RATE,
         }
