@@ -8,6 +8,7 @@ ones in tests.
 """
 
 from .auth_service import AuthService
+from .ip_whitelist_service import IpWhitelistService
 from ..repositories.client_repository import ClientRepository
 from ..repositories.user_repository import UserRepository
 
@@ -18,3 +19,8 @@ def build_auth_service() -> AuthService:
         client_repository=ClientRepository(),
         user_repository=UserRepository(),
     )
+
+
+def build_ip_whitelist_service() -> IpWhitelistService:
+    """Construct an IpWhitelistService (stateless, no dependencies)."""
+    return IpWhitelistService()

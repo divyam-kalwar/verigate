@@ -222,7 +222,7 @@ Always explain important design decisions.
 - [x] Seed data
 - [x] Authentication
 - [x] User validation
-- [ ] IP Whitelisting
+- [x] IP Whitelisting
 - [ ] TPS Limiter
 - [ ] Vendor Simulation
 - [ ] Fallback Logic

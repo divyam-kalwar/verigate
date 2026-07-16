@@ -19,18 +19,18 @@ class InvalidApiException(ApiException):
     def __init__(self) -> None:
         super().__init__(
             error_code=ErrorCodes.INVALID_API_KEY,
-            message="Missing fields or invalid API key",
+            message="Missing fields or invalid API key.",
             status=HttpStatus.UNAUTHORIZED,
         )
 
 
-class IpWhitelistedException(ApiException):
+class IpNotWhitelistedException(ApiException):
     """Raised when the request IP is not allowed for the client."""
 
     def __init__(self, ip_address: str, client_id: str) -> None:
         super().__init__(
             error_code=ErrorCodes.INVALID_IP,
-            message=f"Source IP {ip_address} is whitelisted for client {client_id}",
+            message=f"Access denied. Source IP '{ip_address}' is not authorized for client '{client_id}'.",
             status=HttpStatus.FORBIDDEN,
         )
 
@@ -38,7 +38,7 @@ class IpWhitelistedException(ApiException):
 class PayloadValidationException(ApiException):
     """Raised when the verification request payload is invalid."""
 
-    def __init__(self, message: str = "Request payload validation failed") -> None:
+    def __init__(self, message: str = "Request payload validation failed.") -> None:
         super().__init__(
             error_code=ErrorCodes.VALIDATION_FAILED,
             message=message,
@@ -52,7 +52,7 @@ class RateLimitExceededException(ApiException):
     def __init__(self) -> None:
         super().__init__(
             error_code=ErrorCodes.TPS_LIMIT_EXCEEDED,
-            message="Client TPS limit exceeded",
+            message="Client TPS limit exceeded.",
             status=HttpStatus.TOO_MANY_REQUESTS,
         )
 
@@ -63,6 +63,6 @@ class VendorFailureException(ApiException):
     def __init__(self) -> None:
         super().__init__(
             error_code=ErrorCodes.VENDOR_ALL_FAILED,
-            message="Primary and fallback vendors failed",
+            message="Primary and fallback vendors failed.",
             status=HttpStatus.BAD_GATEWAY,
         )

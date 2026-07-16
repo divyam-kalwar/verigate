@@ -16,10 +16,21 @@ from ..repositories.user_repository import UserRepository
 
 @dataclass
 class AuthResult:
-    """Authenticated request context."""
+    """Authenticated request context.
+
+    Attributes:
+        client_id: The authenticated client identifier.
+        user_id: The validated sub-user identifier.
+        client: The full client document loaded during authentication. It is
+            carried forward so later steps (e.g. IP whitelisting) can reuse the
+            data without querying MongoDB again.
+        user: The full user document loaded during authentication.
+    """
 
     client_id: str
     user_id: str
+    client: dict
+    user: dict
 
 
 class AuthService:
@@ -59,4 +70,6 @@ class AuthService:
         return AuthResult(
             client_id=client["client_id"],
             user_id=user_id,
+            client=client,
+            user=user,
         )
