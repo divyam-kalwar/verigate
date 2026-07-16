@@ -223,7 +223,7 @@ Always explain important design decisions.
 - [x] Authentication
 - [x] User validation
 - [x] IP Whitelisting
-- [ ] TPS Limiter
+- [x] TPS Limiter
 - [ ] Vendor Simulation
 - [ ] Fallback Logic
 - [ ] Request Logging

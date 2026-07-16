@@ -15,7 +15,11 @@ from verigate.config import Config
 from verigate.database.mongo import init_mongo
 from verigate.exceptions.api_exception import ApiException
 from verigate.routes import register_blueprints
-from verigate.services import build_auth_service, build_ip_whitelist_service
+from verigate.services import (
+    build_auth_service,
+    build_ip_whitelist_service,
+    build_rate_limiter_service,
+)
 
 
 def create_app(config: "Config | None" = None) -> Flask:
@@ -38,6 +42,7 @@ def create_app(config: "Config | None" = None) -> Flask:
 
     app.extensions["auth_service"] = build_auth_service()
     app.extensions["ip_whitelist_service"] = build_ip_whitelist_service()
+    app.extensions["rate_limiter_service"] = build_rate_limiter_service()
 
     register_blueprints(app)
 
