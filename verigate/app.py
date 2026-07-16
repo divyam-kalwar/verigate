@@ -19,6 +19,7 @@ from verigate.services import (
     build_auth_service,
     build_ip_whitelist_service,
     build_rate_limiter_service,
+    build_payload_validation_service,
 )
 
 
@@ -43,6 +44,7 @@ def create_app(config: "Config | None" = None) -> Flask:
     app.extensions["auth_service"] = build_auth_service()
     app.extensions["ip_whitelist_service"] = build_ip_whitelist_service()
     app.extensions["rate_limiter_service"] = build_rate_limiter_service()
+    app.extensions["payload_validation_service"] = build_payload_validation_service()
 
     register_blueprints(app)
 

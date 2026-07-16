@@ -10,6 +10,7 @@ ones in tests.
 from .auth_service import AuthService
 from .ip_whitelist_service import IpWhitelistService
 from .rate_limiter_service import RateLimiterService
+from .payload_validation_service import PayloadValidationService
 from ..repositories.client_repository import ClientRepository
 from ..repositories.user_repository import UserRepository
 
@@ -30,3 +31,8 @@ def build_ip_whitelist_service() -> IpWhitelistService:
 def build_rate_limiter_service() -> RateLimiterService:
     """Construct the in-memory RateLimiterService (single shared instance)."""
     return RateLimiterService()
+
+
+def build_payload_validation_service() -> PayloadValidationService:
+    """Construct a PayloadValidationService (stateless, no dependencies)."""
+    return PayloadValidationService()

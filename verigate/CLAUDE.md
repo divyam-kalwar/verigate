@@ -224,6 +224,7 @@ Always explain important design decisions.
 - [x] User validation
 - [x] IP Whitelisting
 - [x] TPS Limiter
+- [x] Payload Validation
 - [ ] Vendor Simulation
 - [ ] Fallback Logic
 - [ ] Request Logging
