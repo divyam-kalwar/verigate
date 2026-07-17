@@ -21,6 +21,7 @@ from verigate.services import (
     build_rate_limiter_service,
     build_payload_validation_service,
     build_vendor_service,
+    build_logging_service,
 )
 
 
@@ -42,17 +43,28 @@ def create_app(config: "Config | None" = None) -> Flask:
 
     init_mongo(app)
 
+    from verigate.repositories.api_log_repository import ApiLogRepository
+
+    with app.app_context():
+        ApiLogRepository().ensure_indexes()
+
     app.extensions["auth_service"] = build_auth_service()
     app.extensions["ip_whitelist_service"] = build_ip_whitelist_service()
     app.extensions["rate_limiter_service"] = build_rate_limiter_service()
     app.extensions["payload_validation_service"] = build_payload_validation_service()
     app.extensions["vendor_service"] = build_vendor_service()
+    app.extensions["logging_service"] = build_logging_service()
 
     register_blueprints(app)
 
     @app.errorhandler(ApiException)
     def handle_api_exception(ex: ApiException):
         """Return the standard VeriGate error envelope for known API errors."""
+        from flask import g
+
+        # Stash for the request teardown logger so failures are recorded too.
+        g.log_error_code = ex.error_code
+        g.log_status = ex.status
         return jsonify(
             {
                 "request_id": f"req_{uuid.uuid4().hex[:8]}",

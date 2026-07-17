@@ -12,8 +12,10 @@ from .ip_whitelist_service import IpWhitelistService
 from .rate_limiter_service import RateLimiterService
 from .payload_validation_service import PayloadValidationService
 from .vendor_service import VendorService, VendorA, VendorB
+from .logging_service import LoggingService
 from ..repositories.client_repository import ClientRepository
 from ..repositories.user_repository import UserRepository
+from ..repositories.api_log_repository import ApiLogRepository
 from ..config import Config
 
 
@@ -55,3 +57,8 @@ def build_vendor_service() -> VendorService:
         max_latency_ms=config.VENDOR_MAX_LATENCY_MS,
     )
     return VendorService(vendor_a=vendor_a, vendor_b=vendor_b)
+
+
+def build_logging_service() -> LoggingService:
+    """Construct LoggingService with its ApiLogRepository."""
+    return LoggingService(repository=ApiLogRepository())

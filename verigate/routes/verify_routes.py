@@ -8,9 +8,10 @@ layer, in order: authentication (AuthService), IP whitelisting
 the authenticated context on Flask `g` and translates service-raised exceptions
 into the uniform JSON envelope via the global ApiException handler in app.py.
 
-The /verify handler delegates the actual verification to VendorService and maps
-the returned VendorResult onto the assignment's success envelope. Vendor
-fallback logic stays inside VendorService; the route only does HTTP/JSON mapping.
+Request logging is centralised in a `teardown_request` hook that delegates to
+LoggingService once per request, so EVERY outcome (success, fallback, and every
+rejection path) is recorded with masked PII. The route itself contains no
+log-building logic.
 """
 
 import uuid
@@ -31,6 +32,8 @@ def enforce_access_control() -> None:
     the standard error envelope. Payload validation runs last, just before any
     verification/vendor logic.
     """
+    g.request_id = f"req_{uuid.uuid4().hex[:8]}"
+
     auth_service = current_app.extensions.get("auth_service")
     if auth_service is None:
         raise RuntimeError("AuthService not initialized in app.extensions")
@@ -40,11 +43,20 @@ def enforce_access_control() -> None:
         user_id=request.headers.get("X-User-Id"),
     )
 
+    # Store client context as soon as it is known so every rejection path
+    # (IP / TPS / payload) is still logged with client_id, user_id and ip.
+    g.client = result.client
+    g.user = result.user
+
     ip_service = current_app.extensions.get("ip_whitelist_service")
     if ip_service is None:
         raise RuntimeError("IpWhitelistService not initialized in app.extensions")
 
-    client_ip = ip_service.enforce(
+    # Resolve and store the client IP first so a rejected (non-whitelisted) IP
+    # is still recorded in the request log for the MIS IP report.
+    g.client_ip = ip_service.resolve_client_ip(request)
+
+    ip_service.enforce(
         request=request,
         client_id=result.client_id,
         whitelisted_ips=result.client["whitelisted_ips"],
@@ -66,9 +78,6 @@ def enforce_access_control() -> None:
     payload = request.get_json(silent=True)
     payload_service.validate_verify_request(payload)
 
-    g.client = result.client
-    g.user = result.user
-    g.client_ip = client_ip
     g.payload = payload
 
 
@@ -80,10 +89,15 @@ def verify():
 
     result = vendor_service.verify(g.payload)
 
+    g.vendor_used = result.source
+    g.fallback_used = result.source == "FALLBACK"
+    g.latency_ms = result.latency_ms
+    g.error_code = None
+
     error_code = "VP2000" if result.source == "PRIMARY" else "VP2001"
     return jsonify(
         {
-            "request_id": f"req_{uuid.uuid4().hex[:8]}",
+            "request_id": g.request_id,
             "status": "SUCCESS",
             "error_code": error_code,
             "data": {
@@ -94,3 +108,33 @@ def verify():
             "latency_ms": result.latency_ms,
         }
     ), 200
+
+
+@verify_bp.teardown_request
+def log_request(exception) -> None:
+    """Log every request (success or failure) via LoggingService.
+
+    Reads the request context accumulated on `g`. For failures, the error code
+    and HTTP status were stashed on `g` by the global ApiException handler.
+    """
+    logging_service = current_app.extensions.get("logging_service")
+    if logging_service is None:
+        return
+
+    client = getattr(g, "client", None)
+    payload = getattr(g, "payload", None)
+
+    logging_service.log_request(
+        request_id=getattr(g, "request_id", "unknown"),
+        client_id=client["client_id"] if client else None,
+        user_id=getattr(g, "user", None)["user_id"] if getattr(g, "user", None) else None,
+        ip=getattr(g, "client_ip", None),
+        endpoint=request.path,
+        id_type=payload.get("id_type") if payload else None,
+        http_status=getattr(g, "log_status", 200 if exception is None else 500),
+        error_code=getattr(g, "log_error_code", getattr(g, "error_code", None)),
+        vendor_used=getattr(g, "vendor_used", None),
+        fallback_used=getattr(g, "fallback_used", False),
+        latency_ms=getattr(g, "latency_ms", 0),
+        payload=payload,
+    )
