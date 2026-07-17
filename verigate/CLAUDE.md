@@ -225,8 +225,8 @@ Always explain important design decisions.
 - [x] IP Whitelisting
 - [x] TPS Limiter
 - [x] Payload Validation
-- [ ] Vendor Simulation
-- [ ] Fallback Logic
+- [x] Vendor Simulation
+- [x] Fallback Logic
 - [ ] Request Logging
 - [ ] MIS APIs
 - [ ] CSV Export

@@ -7,9 +7,15 @@ layer, in order: authentication (AuthService), IP whitelisting
 (PayloadValidationService). The route performs no business logic; it only stores
 the authenticated context on Flask `g` and translates service-raised exceptions
 into the uniform JSON envelope via the global ApiException handler in app.py.
+
+The /verify handler delegates the actual verification to VendorService and maps
+the returned VendorResult onto the assignment's success envelope. Vendor
+fallback logic stays inside VendorService; the route only does HTTP/JSON mapping.
 """
 
-from flask import Blueprint, current_app, g, request
+import uuid
+
+from flask import Blueprint, current_app, g, jsonify, request
 
 verify_bp = Blueprint("verify", __name__, url_prefix="/api/v1")
 
@@ -57,17 +63,34 @@ def enforce_access_control() -> None:
     if payload_service is None:
         raise RuntimeError("PayloadValidationService not initialized in app.extensions")
 
-    payload_service.validate_verify_request(request.get_json(silent=True))
+    payload = request.get_json(silent=True)
+    payload_service.validate_verify_request(payload)
 
     g.client = result.client
     g.user = result.user
     g.client_ip = client_ip
+    g.payload = payload
 
 
 @verify_bp.post("/verify")
 def verify():
-    return {
-        "message": "Access granted",
-        "client_id": g.client["client_id"],
-        "user_id": g.user["user_id"],
-    }, 200
+    vendor_service = current_app.extensions.get("vendor_service")
+    if vendor_service is None:
+        raise RuntimeError("VendorService not initialized in app.extensions")
+
+    result = vendor_service.verify(g.payload)
+
+    error_code = "VP2000" if result.source == "PRIMARY" else "VP2001"
+    return jsonify(
+        {
+            "request_id": f"req_{uuid.uuid4().hex[:8]}",
+            "status": "SUCCESS",
+            "error_code": error_code,
+            "data": {
+                "verified": result.verified,
+                "name_match_score": result.name_match_score,
+                "source": result.source,
+            },
+            "latency_ms": result.latency_ms,
+        }
+    ), 200

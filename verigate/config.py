@@ -28,6 +28,9 @@ class Config:
         self.ADMIN_KEY: str = os.getenv("ADMIN_KEY", "")
         self.VENDOR_A_FAILURE_RATE: float = float(os.getenv("VENDOR_A_FAILURE_RATE", "0.2"))
         self.VENDOR_A_TIMEOUT_RATE: float = float(os.getenv("VENDOR_A_TIMEOUT_RATE", "0.1"))
+        self.VENDOR_MIN_LATENCY_MS: int = int(os.getenv("VENDOR_MIN_LATENCY_MS", "100"))
+        self.VENDOR_MAX_LATENCY_MS: int = int(os.getenv("VENDOR_MAX_LATENCY_MS", "800"))
+        self.VENDOR_B_FAILURE_RATE: float = float(os.getenv("VENDOR_B_FAILURE_RATE", "0.0"))
 
     def to_mapping(self) -> dict:
         """Expose configuration as a mapping suitable for Flask's config."""
@@ -38,4 +41,7 @@ class Config:
             "ADMIN_KEY": self.ADMIN_KEY,
             "VENDOR_A_FAILURE_RATE": self.VENDOR_A_FAILURE_RATE,
             "VENDOR_A_TIMEOUT_RATE": self.VENDOR_A_TIMEOUT_RATE,
+            "VENDOR_MIN_LATENCY_MS": self.VENDOR_MIN_LATENCY_MS,
+            "VENDOR_MAX_LATENCY_MS": self.VENDOR_MAX_LATENCY_MS,
+            "VENDOR_B_FAILURE_RATE": self.VENDOR_B_FAILURE_RATE,
         }

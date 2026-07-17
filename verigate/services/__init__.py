@@ -11,8 +11,10 @@ from .auth_service import AuthService
 from .ip_whitelist_service import IpWhitelistService
 from .rate_limiter_service import RateLimiterService
 from .payload_validation_service import PayloadValidationService
+from .vendor_service import VendorService, VendorA, VendorB
 from ..repositories.client_repository import ClientRepository
 from ..repositories.user_repository import UserRepository
+from ..config import Config
 
 
 def build_auth_service() -> AuthService:
@@ -36,3 +38,20 @@ def build_rate_limiter_service() -> RateLimiterService:
 def build_payload_validation_service() -> PayloadValidationService:
     """Construct a PayloadValidationService (stateless, no dependencies)."""
     return PayloadValidationService()
+
+
+def build_vendor_service() -> VendorService:
+    """Construct VendorService with Vendor A/B configured from Config."""
+    config = Config()
+    vendor_a = VendorA(
+        failure_rate=config.VENDOR_A_FAILURE_RATE,
+        timeout_rate=config.VENDOR_A_TIMEOUT_RATE,
+        min_latency_ms=config.VENDOR_MIN_LATENCY_MS,
+        max_latency_ms=config.VENDOR_MAX_LATENCY_MS,
+    )
+    vendor_b = VendorB(
+        failure_rate=config.VENDOR_B_FAILURE_RATE,
+        min_latency_ms=config.VENDOR_MIN_LATENCY_MS,
+        max_latency_ms=config.VENDOR_MAX_LATENCY_MS,
+    )
+    return VendorService(vendor_a=vendor_a, vendor_b=vendor_b)
