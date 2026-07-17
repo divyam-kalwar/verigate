@@ -228,7 +228,7 @@ Always explain important design decisions.
 - [x] Vendor Simulation
 - [x] Fallback Logic
 - [x] Request Logging
-- [ ] MIS APIs
+- [x] MIS APIs
 - [ ] CSV Export
 - [ ] Load Testing
 - [ ] Unit Testing

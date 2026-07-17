@@ -24,6 +24,17 @@ class InvalidApiException(ApiException):
         )
 
 
+class InvalidAdminKeyException(ApiException):
+    """Raised when MIS admin authentication fails."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            error_code=ErrorCodes.INVALID_API_KEY,
+            message="Missing or invalid admin key.",
+            status=HttpStatus.UNAUTHORIZED,
+        )
+
+
 class IpNotWhitelistedException(ApiException):
     """Raised when the request IP is not allowed for the client."""
 

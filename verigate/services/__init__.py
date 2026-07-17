@@ -13,6 +13,7 @@ from .rate_limiter_service import RateLimiterService
 from .payload_validation_service import PayloadValidationService
 from .vendor_service import VendorService, VendorA, VendorB
 from .logging_service import LoggingService
+from .mis_service import MisService
 from ..repositories.client_repository import ClientRepository
 from ..repositories.user_repository import UserRepository
 from ..repositories.api_log_repository import ApiLogRepository
@@ -62,3 +63,8 @@ def build_vendor_service() -> VendorService:
 def build_logging_service() -> LoggingService:
     """Construct LoggingService with its ApiLogRepository."""
     return LoggingService(repository=ApiLogRepository())
+
+
+def build_mis_service() -> MisService:
+    """Construct MisService with its ApiLogRepository."""
+    return MisService(repository=ApiLogRepository())

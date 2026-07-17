@@ -18,6 +18,8 @@ import uuid
 
 from flask import Blueprint, current_app, g, jsonify, request
 
+from verigate.exceptions.error_codes import ErrorCodes
+
 verify_bp = Blueprint("verify", __name__, url_prefix="/api/v1")
 
 
@@ -92,9 +94,13 @@ def verify():
     g.vendor_used = result.source
     g.fallback_used = result.source == "FALLBACK"
     g.latency_ms = result.latency_ms
-    g.error_code = None
+    error_code = (
+        ErrorCodes.VERIFIED_PRIMARY
+        if result.source == "PRIMARY"
+        else ErrorCodes.VERIFIED_FALLBACK
+    )
+    g.error_code = error_code
 
-    error_code = "VP2000" if result.source == "PRIMARY" else "VP2001"
     return jsonify(
         {
             "request_id": g.request_id,
