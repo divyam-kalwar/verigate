@@ -23,6 +23,7 @@ from verigate.services import (
     build_vendor_service,
     build_logging_service,
     build_mis_service,
+    build_csv_export_service,
 )
 
 
@@ -56,6 +57,7 @@ def create_app(config: "Config | None" = None) -> Flask:
     app.extensions["vendor_service"] = build_vendor_service()
     app.extensions["logging_service"] = build_logging_service()
     app.extensions["mis_service"] = build_mis_service()
+    app.extensions["csv_export_service"] = build_csv_export_service()
 
     register_blueprints(app)
 

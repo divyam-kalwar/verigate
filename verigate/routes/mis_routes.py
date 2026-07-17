@@ -4,10 +4,11 @@ Thin Blueprint exposing Management Information System endpoints backed by
 MongoDB aggregation pipelines (CLAUDE.md: routes stay thin; aggregation logic
 lives in the repository, the service is a pass-through). Each handler only reads
 optional query parameters (client_id, from, to, group_by, date), delegates to
-MisService, and returns the structured JSON result.
+MisService for data, then optionally to CsvExportService for CSV formatting,
+and returns the structured JSON or CSV result.
 """
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, make_response, request
 
 from verigate.exceptions.api_exception import InvalidAdminKeyException
 
@@ -18,6 +19,13 @@ def _mis_service():
     service = current_app.extensions.get("mis_service")
     if service is None:
         raise RuntimeError("MisService not initialized in app.extensions")
+    return service
+
+
+def _csv_service():
+    service = current_app.extensions.get("csv_export_service")
+    if service is None:
+        raise RuntimeError("CsvExportService not initialized in app.extensions")
     return service
 
 
@@ -42,6 +50,22 @@ def usage():
     )
 
 
+@mis_bp.get("/usage/export")
+def usage_export():
+    group_by = request.args.get("group_by", "client")
+    data = _mis_service().usage_report(
+        group_by=group_by,
+        client_id=request.args.get("client_id"),
+        from_date=request.args.get("from"),
+        to_date=request.args.get("to"),
+    )
+    csv_data = _csv_service().export_usage(data, group_by=group_by)
+    response = make_response(csv_data)
+    response.headers["Content-Type"] = "text/csv"
+    response.headers["Content-Disposition"] = "attachment; filename=usage_report.csv"
+    return response
+
+
 @mis_bp.get("/errors")
 def errors():
     return jsonify(
@@ -53,6 +77,20 @@ def errors():
     )
 
 
+@mis_bp.get("/errors/export")
+def errors_export():
+    data = _mis_service().error_distribution(
+        client_id=request.args.get("client_id"),
+        from_date=request.args.get("from"),
+        to_date=request.args.get("to"),
+    )
+    csv_data = _csv_service().export_errors(data)
+    response = make_response(csv_data)
+    response.headers["Content-Type"] = "text/csv"
+    response.headers["Content-Disposition"] = "attachment; filename=error_distribution.csv"
+    return response
+
+
 @mis_bp.get("/tps")
 def tps():
     return jsonify(
@@ -61,6 +99,19 @@ def tps():
             date=request.args.get("date"),
         )
     )
+
+
+@mis_bp.get("/tps/export")
+def tps_export():
+    data = _mis_service().tps_metrics(
+        client_id=request.args.get("client_id"),
+        date=request.args.get("date"),
+    )
+    csv_data = _csv_service().export_tps(data)
+    response = make_response(csv_data)
+    response.headers["Content-Type"] = "text/csv"
+    response.headers["Content-Disposition"] = "attachment; filename=tps_report.csv"
+    return response
 
 
 @mis_bp.get("/fallback")
@@ -74,6 +125,20 @@ def fallback():
     )
 
 
+@mis_bp.get("/fallback/export")
+def fallback_export():
+    data = _mis_service().fallback_metrics(
+        client_id=request.args.get("client_id"),
+        from_date=request.args.get("from"),
+        to_date=request.args.get("to"),
+    )
+    csv_data = _csv_service().export_fallback(data)
+    response = make_response(csv_data)
+    response.headers["Content-Type"] = "text/csv"
+    response.headers["Content-Disposition"] = "attachment; filename=fallback_report.csv"
+    return response
+
+
 @mis_bp.get("/ips")
 def ips():
     return jsonify(
@@ -83,3 +148,17 @@ def ips():
             to_date=request.args.get("to"),
         )
     )
+
+
+@mis_bp.get("/ips/export")
+def ips_export():
+    data = _mis_service().ip_report(
+        client_id=request.args.get("client_id"),
+        from_date=request.args.get("from"),
+        to_date=request.args.get("to"),
+    )
+    csv_data = _csv_service().export_ips(data)
+    response = make_response(csv_data)
+    response.headers["Content-Type"] = "text/csv"
+    response.headers["Content-Disposition"] = "attachment; filename=ip_report.csv"
+    return response

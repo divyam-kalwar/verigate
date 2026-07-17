@@ -229,8 +229,7 @@ Always explain important design decisions.
 - [x] Fallback Logic
 - [x] Request Logging
 - [x] MIS APIs
-- [ ] CSV Export
+- [x] CSV Export
 - [ ] Load Testing
-- [ ] Unit Testing
 - [ ] Docker
 - [ ] Documentation
