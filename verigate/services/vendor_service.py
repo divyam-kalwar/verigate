@@ -60,6 +60,12 @@ class VendorResult:
     latency_ms: int
 
 
+def _is_verified(payload: Mapping[str, Any]) -> bool:
+    """Deterministically simulate a not-verified result for some ID numbers."""
+    id_number = str(payload.get("id_number", ""))
+    return not id_number.endswith("0")
+
+
 class VendorA:
     """Primary (simulated) verification vendor."""
 
@@ -94,9 +100,10 @@ class VendorA:
         if roll < self._failure_rate + self._timeout_rate:
             raise VendorError("Vendor A timed out.")
 
+        verified = _is_verified(payload)
         return VendorResult(
-            verified=True,
-            name_match_score=random.randint(80, 99),
+            verified=verified,
+            name_match_score=random.randint(80, 99) if verified else random.randint(35, 79),
             source="PRIMARY",
             latency_ms=latency,
         )
@@ -131,9 +138,10 @@ class VendorB:
         if random.random() < self._failure_rate:
             raise VendorError("Vendor B failed.")
 
+        verified = _is_verified(payload)
         return VendorResult(
-            verified=True,
-            name_match_score=random.randint(80, 99),
+            verified=verified,
+            name_match_score=random.randint(80, 99) if verified else random.randint(35, 79),
             source="FALLBACK",
             latency_ms=latency,
         )

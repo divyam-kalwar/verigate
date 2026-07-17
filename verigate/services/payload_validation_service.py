@@ -60,6 +60,6 @@ class PayloadValidationService:
 
         if payload["id_type"] not in ALLOWED_ID_TYPES:
             raise PayloadValidationException(
-                f"Field '{payload[id_type]}' must be one of: "
+                "Field 'id_type' must be one of: "
                 f"{', '.join(sorted(ALLOWED_ID_TYPES))}."
             )

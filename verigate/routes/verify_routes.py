@@ -94,11 +94,12 @@ def verify():
     g.vendor_used = result.source
     g.fallback_used = result.source == "FALLBACK"
     g.latency_ms = result.latency_ms
-    error_code = (
-        ErrorCodes.VERIFIED_PRIMARY
-        if result.source == "PRIMARY"
-        else ErrorCodes.VERIFIED_FALLBACK
-    )
+    if not result.verified:
+        error_code = ErrorCodes.NOT_VERIFIED
+    elif result.source == "PRIMARY":
+        error_code = ErrorCodes.VERIFIED_PRIMARY
+    else:
+        error_code = ErrorCodes.VERIFIED_FALLBACK
     g.error_code = error_code
 
     return jsonify(

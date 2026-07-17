@@ -9,7 +9,7 @@ preferred, configurable entry point (e.g. for tests and multiple app instances).
 
 import uuid
 
-from flask import Flask, jsonify
+from flask import Flask, g, jsonify
 
 from verigate.config import Config
 from verigate.database.mongo import init_mongo
@@ -64,19 +64,35 @@ def create_app(config: "Config | None" = None) -> Flask:
     @app.errorhandler(ApiException)
     def handle_api_exception(ex: ApiException):
         """Return the standard VeriGate error envelope for known API errors."""
-        from flask import g
-
         # Stash for the request teardown logger so failures are recorded too.
         g.log_error_code = ex.error_code
         g.log_status = ex.status
+        request_id = getattr(g, "request_id", f"req_{uuid.uuid4().hex[:8]}")
         return jsonify(
             {
-                "request_id": f"req_{uuid.uuid4().hex[:8]}",
+                "request_id": request_id,
                 "status": "FAILED",
                 "error_code": ex.error_code,
                 "message": ex.message,
             }
         ), ex.status
+
+    @app.errorhandler(Exception)
+    def handle_unexpected_exception(ex: Exception):
+        """Return JSON for unexpected failures without exposing stack traces."""
+        if app.testing:
+            raise ex
+        request_id = getattr(g, "request_id", f"req_{uuid.uuid4().hex[:8]}")
+        g.log_error_code = "VP5000"
+        g.log_status = 500
+        return jsonify(
+            {
+                "request_id": request_id,
+                "status": "FAILED",
+                "error_code": "VP5000",
+                "message": "Internal server error.",
+            }
+        ), 500
 
     @app.get("/health")
     def health() -> dict:

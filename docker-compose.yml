@@ -1,0 +1,44 @@
+# Docker Compose configuration for VeriGate.
+#
+# Spins up two services:
+#   - mongodb: official MongoDB Community image
+#   - flask: VeriGate application built from the local Dockerfile
+#
+# Environment variables are loaded from .env (copy .env.example to .env first).
+# The Flask container connects to MongoDB using the Docker service name 'mongodb'.
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: verigate-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: verigate
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  flask:
+    build: .
+    container_name: verigate-flask
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: mongodb://mongodb:27017
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./verigate:/app/verigate
+
+volumes:
+  mongodb_data:

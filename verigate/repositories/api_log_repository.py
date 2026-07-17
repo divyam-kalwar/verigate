@@ -23,6 +23,12 @@ SUCCESS_CODES = {
     ErrorCodes.NOT_VERIFIED,
 }
 
+# Error codes where the record was actually verified (excludes VP2002).
+VERIFIED_CODES = {
+    ErrorCodes.VERIFIED_PRIMARY,
+    ErrorCodes.VERIFIED_FALLBACK,
+}
+
 
 def _parse_date(value: Optional[str]) -> Optional[datetime]:
     """Parse an ISO date (YYYY-MM-DD) into a UTC datetime at midnight.
@@ -127,7 +133,7 @@ class ApiLogRepository:
             {"$match": match},
             {
                 "$addFields": {
-                    "is_success": {"$in": ["$error_code", list(SUCCESS_CODES)]},
+                    "is_success": {"$in": ["$error_code", list(VERIFIED_CODES)]},
                     "is_fallback": {"$eq": ["$fallback_used", True]},
                     "is_not_verified": {"$eq": ["$error_code", "VP2002"]},
                     "is_failed": {
@@ -269,7 +275,7 @@ class ApiLogRepository:
                 "$group": {
                     "_id": "$client_id",
                     "total_success": {
-                        "$sum": {"$cond": [{"$in": ["$error_code", list(SUCCESS_CODES)]}, 1, 0]}
+                        "$sum": {"$cond": [{"$in": ["$error_code", list(VERIFIED_CODES)]}, 1, 0]}
                     },
                     "served_by_fallback": {"$sum": {"$cond": ["$fallback_used", 1, 0]}},
                 }

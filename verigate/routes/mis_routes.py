@@ -40,14 +40,15 @@ def require_admin_key() -> None:
 @mis_bp.get("/usage")
 def usage():
     group_by = request.args.get("group_by", "client")
-    return jsonify(
-        _mis_service().usage_report(
-            group_by=group_by,
-            client_id=request.args.get("client_id"),
-            from_date=request.args.get("from"),
-            to_date=request.args.get("to"),
-        )
+    data = _mis_service().usage_report(
+        group_by=group_by,
+        client_id=request.args.get("client_id"),
+        from_date=request.args.get("from"),
+        to_date=request.args.get("to"),
     )
+    if request.args.get("format") == "csv":
+        return _csv_response(_csv_service().export_usage(data, group_by=group_by), "usage_report.csv")
+    return jsonify(data)
 
 
 @mis_bp.get("/usage/export")
@@ -60,21 +61,19 @@ def usage_export():
         to_date=request.args.get("to"),
     )
     csv_data = _csv_service().export_usage(data, group_by=group_by)
-    response = make_response(csv_data)
-    response.headers["Content-Type"] = "text/csv"
-    response.headers["Content-Disposition"] = "attachment; filename=usage_report.csv"
-    return response
+    return _csv_response(csv_data, "usage_report.csv")
 
 
 @mis_bp.get("/errors")
 def errors():
-    return jsonify(
-        _mis_service().error_distribution(
-            client_id=request.args.get("client_id"),
-            from_date=request.args.get("from"),
-            to_date=request.args.get("to"),
-        )
+    data = _mis_service().error_distribution(
+        client_id=request.args.get("client_id"),
+        from_date=request.args.get("from"),
+        to_date=request.args.get("to"),
     )
+    if request.args.get("format") == "csv":
+        return _csv_response(_csv_service().export_errors(data), "error_distribution.csv")
+    return jsonify(data)
 
 
 @mis_bp.get("/errors/export")
@@ -85,10 +84,7 @@ def errors_export():
         to_date=request.args.get("to"),
     )
     csv_data = _csv_service().export_errors(data)
-    response = make_response(csv_data)
-    response.headers["Content-Type"] = "text/csv"
-    response.headers["Content-Disposition"] = "attachment; filename=error_distribution.csv"
-    return response
+    return _csv_response(csv_data, "error_distribution.csv")
 
 
 @mis_bp.get("/tps")
@@ -108,10 +104,7 @@ def tps_export():
         date=request.args.get("date"),
     )
     csv_data = _csv_service().export_tps(data)
-    response = make_response(csv_data)
-    response.headers["Content-Type"] = "text/csv"
-    response.headers["Content-Disposition"] = "attachment; filename=tps_report.csv"
-    return response
+    return _csv_response(csv_data, "tps_report.csv")
 
 
 @mis_bp.get("/fallback")
@@ -133,10 +126,7 @@ def fallback_export():
         to_date=request.args.get("to"),
     )
     csv_data = _csv_service().export_fallback(data)
-    response = make_response(csv_data)
-    response.headers["Content-Type"] = "text/csv"
-    response.headers["Content-Disposition"] = "attachment; filename=fallback_report.csv"
-    return response
+    return _csv_response(csv_data, "fallback_report.csv")
 
 
 @mis_bp.get("/ips")
@@ -158,7 +148,11 @@ def ips_export():
         to_date=request.args.get("to"),
     )
     csv_data = _csv_service().export_ips(data)
+    return _csv_response(csv_data, "ip_report.csv")
+
+
+def _csv_response(csv_data: str, filename: str):
     response = make_response(csv_data)
     response.headers["Content-Type"] = "text/csv"
-    response.headers["Content-Disposition"] = "attachment; filename=ip_report.csv"
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
