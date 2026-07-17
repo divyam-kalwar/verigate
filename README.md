@@ -171,7 +171,7 @@ Press Ctrl+C to quit
 In a separate terminal (with the virtual environment activated):
 
 ```bash
-pytest verigate/tests -v
+pytest verigate/tests -v -p no:cacheprovider
 ```
 
 Expected output:
@@ -224,7 +224,7 @@ demonstrate rate limiting.
 ### 1. Start services
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
 This builds the Flask image and starts both MongoDB and Flask containers.
